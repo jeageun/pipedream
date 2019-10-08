@@ -22,7 +22,9 @@ class Graph(object):
 
         self._colors = ['lightblue', 'green', 'grey', 'firebrick1',
                         'gold', 'chocolate1', 'beige']
-
+        
+        self.done = False
+        
         if node is not None:
             self.in_edges[node.node_id] = list()
 
@@ -86,16 +88,35 @@ class Graph(object):
 
     def populate_depths(self):
         # Helper method that annotates each node in the graph with its depth from the sink.
+        if self.done == True:
+            return
+        self.done = True
+        
         sources = self.sources()
         sources[0].depth = 1
         queue = [sources[0]]
+        delqueue = []
+        
         while len(queue) > 0:
-            node = queue.pop(-1)
+            node = queue.pop(0)
             if node.node_id not in self.edges: continue
             for out_node in self.edges[node.node_id]:
+                if out_node.depth is not None and out_node.depth < (node.depth+1):
+                    delqueue.append(out_node)
                 if out_node.depth is None or out_node.depth < (node.depth + 1):
                     out_node.depth = node.depth + 1
                 queue.append(out_node)
+                #print(out_node.depth)
+            #need to delete unproper data from the queue
+            while len(delqueue)>0:
+                node = delqueue.pop(-1)
+                if node.node_id not in self.edges: continue
+                for out_node in self.edges[node.node_id]:
+                    if out_node.depth is not None:
+                        out_node.depth = None
+                        delqueue.append(out_node)
+                        queue = list(filter(lambda x:x !=out_node,queue))
+        #print("Finish populatedepth")
 
     def populate_heights(self):
         # Helper method that annotates each node in the graph with its height from the further
